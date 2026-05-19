@@ -139,23 +139,45 @@ export function MenuExperience() {
       <div className="absolute inset-0 z-0">
         <Canvas
           shadows
-          camera={{ position: [0, 1.6, 3.6], fov: 38 }}
-          key={`${category.id}-${varIndex}`}
+          dpr={[1, 2]}
+          camera={{ position: [0, 1.7, 3.4], fov: 36 }}
+          gl={{ antialias: true, toneMappingExposure: 1.05 }}
         >
-          <color attach="background" args={["#faf6ee"]} />
-          <ambientLight intensity={0.5} />
-          <directionalLight
-            position={[4, 6, 3]}
-            intensity={1.4}
+          <color attach="background" args={["#f3ebdc"]} />
+          <fog attach="fog" args={["#f3ebdc", 6, 14]} />
+          <SoftShadows size={28} samples={16} focus={0.6} />
+
+          {/* Warm key light (overhead pendant feel) */}
+          <spotLight
+            position={[2.5, 5, 2]}
+            angle={0.55}
+            penumbra={0.8}
+            intensity={2.2}
+            color={"#ffe1b0"}
             castShadow
-            shadow-mapSize={[1024, 1024]}
+            shadow-mapSize={[2048, 2048]}
+            shadow-bias={-0.0002}
           />
-          <directionalLight position={[-3, 2, -2]} intensity={0.3} color="#ffd8a8" />
-          <Dish3D shape={category.shape} color={variant.color} accent={variant.accent} />
-          <ContactShadows position={[0, -0.42, 0]} opacity={0.5} blur={2.4} far={3} resolution={512} />
+          {/* Cool rim from behind */}
+          <directionalLight position={[-3, 2.5, -3]} intensity={0.5} color={"#cfe2ff"} />
+          {/* Soft fill */}
+          <ambientLight intensity={0.35} />
+
+          {/* Wooden table */}
+          <mesh position={[0, -0.45, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+            <circleGeometry args={[6, 64]} />
+            <meshStandardMaterial color={"#3a2418"} roughness={0.85} metalness={0.05} />
+          </mesh>
+
+          <group key={`${category.id}-${varIndex}`}>
+            <Dish3D shape={category.shape} color={variant.color} accent={variant.accent} />
+          </group>
+
+          <ContactShadows position={[0, -0.44, 0]} opacity={0.7} blur={2.6} far={4} resolution={1024} color={"#1a0f08"} />
           <Environment preset="apartment" />
         </Canvas>
       </div>
+
 
       {/* Dish info card (right) */}
       <div className="pointer-events-none absolute right-8 top-1/2 z-20 w-[340px] max-w-[40vw] -translate-y-1/2 text-right">
