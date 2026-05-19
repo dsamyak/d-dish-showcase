@@ -95,7 +95,7 @@ export function MenuExperience() {
   return (
     <div
       ref={containerRef}
-      className="relative h-screen w-screen overflow-hidden bg-background text-foreground select-none touch-none"
+      className="relative h-screen w-screen overflow-hidden bg-background text-foreground select-none touch-none grain vignette"
     >
       {/* Header */}
       <header className="absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-8 py-6">
