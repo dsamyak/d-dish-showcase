@@ -1,5 +1,5 @@
 import { Canvas } from "@react-three/fiber";
-import { ContactShadows, Environment } from "@react-three/drei";
+import { ContactShadows, Environment, SoftShadows } from "@react-three/drei";
 import { useEffect, useRef, useState } from "react";
 import { MENU } from "./dishes";
 import { Dish3D } from "./Dish3D";
