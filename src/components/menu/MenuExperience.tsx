@@ -218,6 +218,7 @@ export function MenuExperience() {
         >
           <color attach="background" args={["#f3ebdc"]} />
           <fog attach="fog" args={["#f3ebdc", 6, 14]} />
+          <CameraRig pointer={pointerRef.current} />
           {stageStatic}
           <group key={`${category.id}-${varIndex}`}>
             <Dish3D shape={category.shape} color={variant.color} accent={variant.accent} />
