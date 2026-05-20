@@ -13,7 +13,6 @@ type Props = {
 // ---------- Helpers ----------
 
 function jitter(seed: number) {
-  // deterministic pseudo random
   const x = Math.sin(seed * 9301 + 49297) * 233280;
   return x - Math.floor(x);
 }
@@ -21,7 +20,6 @@ function jitter(seed: number) {
 function Plate() {
   return (
     <group>
-      {/* Outer rim */}
       <mesh receiveShadow castShadow position={[0, -0.2, 0]}>
         <cylinderGeometry args={[1.55, 1.5, 0.06, 96]} />
         <meshPhysicalMaterial
@@ -32,16 +30,14 @@ function Plate() {
           clearcoatRoughness={0.2}
         />
       </mesh>
-      {/* Inner well */}
       <mesh receiveShadow position={[0, -0.17, 0]}>
         <cylinderGeometry args={[1.25, 1.3, 0.04, 96]} />
-        <meshPhysicalMaterial
-          color="#efe7d6"
-          roughness={0.4}
-          clearcoat={0.4}
-        />
+        <meshPhysicalMaterial color="#efe7d6" roughness={0.4} clearcoat={0.4} />
       </mesh>
-      {/* Thin gold ring */}
+      <mesh position={[-0.45, -0.135, -0.35]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.18, 32]} />
+        <meshStandardMaterial color="#ffffff" transparent opacity={0.12} />
+      </mesh>
       <mesh position={[0, -0.13, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[1.32, 1.36, 96]} />
         <meshStandardMaterial color="#c9a24a" metalness={0.9} roughness={0.25} side={THREE.DoubleSide} />
@@ -50,20 +46,81 @@ function Plate() {
   );
 }
 
+// ---------- Steam (for hot dishes) ----------
+
+function Steam() {
+  const ref = useRef<THREE.Group>(null);
+  const puffs = useMemo(
+    () =>
+      Array.from({ length: 6 }).map((_, i) => ({
+        x: (jitter(i) - 0.5) * 0.6,
+        z: (jitter(i + 9) - 0.5) * 0.6,
+        speed: 0.25 + jitter(i + 3) * 0.25,
+        offset: jitter(i + 5) * 2,
+        scale: 0.18 + jitter(i + 7) * 0.12,
+      })),
+    []
+  );
+  useFrame((state) => {
+    if (!ref.current) return;
+    const t = state.clock.elapsedTime;
+    ref.current.children.forEach((child, i) => {
+      const p = puffs[i];
+      const y = ((t * p.speed + p.offset) % 1.6);
+      child.position.y = 0.2 + y;
+      child.position.x = p.x + Math.sin(t * 0.8 + i) * 0.06;
+      const s = p.scale * (1 + y * 0.8);
+      child.scale.setScalar(s);
+      (child as THREE.Mesh).material &&
+        ((child as any).material.opacity = Math.max(0, 0.45 - y * 0.35));
+    });
+  });
+  return (
+    <group ref={ref}>
+      {puffs.map((p, i) => (
+        <mesh key={i} position={[p.x, 0.2, p.z]}>
+          <sphereGeometry args={[1, 12, 12]} />
+          <meshStandardMaterial
+            color="#ffffff"
+            transparent
+            opacity={0.35}
+            depthWrite={false}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 // ---------- Dish ----------
 
 export function Dish3D({ shape, color, accent }: Props) {
   const group = useRef<THREE.Group>(null);
+  const revealRef = useRef<THREE.Group>(null);
+  const tRef = useRef(0);
 
   useFrame((_, delta) => {
     if (group.current) group.current.rotation.y += delta * 0.3;
+    // Reveal: scale + lift in over ~0.6s
+    if (revealRef.current) {
+      tRef.current = Math.min(1, tRef.current + delta / 0.6);
+      const e = 1 - Math.pow(1 - tRef.current, 3); // easeOutCubic
+      revealRef.current.scale.setScalar(0.7 + e * 0.3);
+      revealRef.current.position.y = -0.15 + (1 - e) * 0.6;
+      (revealRef.current as any).rotation.y = (1 - e) * 0.4;
+    }
   });
+
+  const hot = shape !== "dessert";
 
   return (
     <Float speed={1.2} rotationIntensity={0.15} floatIntensity={0.35}>
-      <group ref={group} position={[0, -0.15, 0]}>
-        <Plate />
-        <FoodShape shape={shape} color={color} accent={accent} />
+      <group ref={revealRef}>
+        <group ref={group}>
+          <Plate />
+          <FoodShape shape={shape} color={color} accent={accent} />
+        </group>
+        {hot && <Steam />}
       </group>
     </Float>
   );
@@ -76,6 +133,7 @@ function FoodShape({ shape, color, accent }: Props) {
   if (shape === "dosa") return <DosaDish color={color} accent={accent} />;
   return <DessertDish color={color} accent={accent} />;
 }
+
 
 // ---------- Curry (paneer / gravy) ----------
 
