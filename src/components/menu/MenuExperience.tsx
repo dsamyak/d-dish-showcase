@@ -1,9 +1,23 @@
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, Environment, SoftShadows } from "@react-three/drei";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MENU } from "./dishes";
 import { Dish3D } from "./Dish3D";
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
+
+// Smoothly tracks pointer for subtle camera parallax
+function CameraRig({ pointer }: { pointer: { x: number; y: number } }) {
+  const { camera } = useThree();
+  useFrame(() => {
+    const tx = pointer.x * 0.4;
+    const ty = 1.7 + pointer.y * 0.25;
+    camera.position.x += (tx - camera.position.x) * 0.06;
+    camera.position.y += (ty - camera.position.y) * 0.06;
+    camera.lookAt(0, 0.1, 0);
+  });
+  return null;
+}
+
 
 export function MenuExperience() {
   const [catIndex, setCatIndex] = useState(0);
