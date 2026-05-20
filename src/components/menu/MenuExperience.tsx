@@ -172,6 +172,14 @@ export function MenuExperience() {
         </div>
       </header>
 
+      {/* Top progress bar (category) */}
+      <div className="absolute left-0 right-0 top-0 z-30 h-[2px] bg-foreground/5">
+        <div
+          className="h-full bg-gradient-to-r from-accent via-primary to-accent transition-all duration-500 ease-out"
+          style={{ width: `${((catIndex + 1) / MENU.length) * 100}%` }}
+        />
+      </div>
+
       {/* Vertical category rail (left) */}
       <nav className="absolute left-4 top-1/2 z-30 hidden -translate-y-1/2 space-y-3 md:block">
         {MENU.map((c, i) => {
