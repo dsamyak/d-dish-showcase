@@ -1,15 +1,40 @@
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, Environment, SoftShadows } from "@react-three/drei";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MENU } from "./dishes";
 import { Dish3D } from "./Dish3D";
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
 
+// Smoothly tracks pointer for subtle camera parallax
+function CameraRig({ pointer }: { pointer: { x: number; y: number } }) {
+  const { camera } = useThree();
+  useFrame(() => {
+    const tx = pointer.x * 0.4;
+    const ty = 1.7 + pointer.y * 0.25;
+    camera.position.x += (tx - camera.position.x) * 0.06;
+    camera.position.y += (ty - camera.position.y) * 0.06;
+    camera.lookAt(0, 0.1, 0);
+  });
+  return null;
+}
+
+
 export function MenuExperience() {
   const [catIndex, setCatIndex] = useState(0);
   const [varIndex, setVarIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const lockRef = useRef(false);
+  const pointerRef = useRef({ x: 0, y: 0 });
+
+  // Pointer parallax
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      pointerRef.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+      pointerRef.current.y = -((e.clientY / window.innerHeight) * 2 - 1);
+    };
+    window.addEventListener("pointermove", onMove);
+    return () => window.removeEventListener("pointermove", onMove);
+  }, []);
 
   const category = MENU[catIndex];
   const variant = category.variants[varIndex];
@@ -147,6 +172,14 @@ export function MenuExperience() {
         </div>
       </header>
 
+      {/* Top progress bar (category) */}
+      <div className="absolute left-0 right-0 top-0 z-30 h-[2px] bg-foreground/5">
+        <div
+          className="h-full bg-gradient-to-r from-accent via-primary to-accent transition-all duration-500 ease-out"
+          style={{ width: `${((catIndex + 1) / MENU.length) * 100}%` }}
+        />
+      </div>
+
       {/* Vertical category rail (left) */}
       <nav className="absolute left-4 top-1/2 z-30 hidden -translate-y-1/2 space-y-3 md:block">
         {MENU.map((c, i) => {
@@ -193,6 +226,7 @@ export function MenuExperience() {
         >
           <color attach="background" args={["#f3ebdc"]} />
           <fog attach="fog" args={["#f3ebdc", 6, 14]} />
+          <CameraRig pointer={pointerRef.current} />
           {stageStatic}
           <group key={`${category.id}-${varIndex}`}>
             <Dish3D shape={category.shape} color={variant.color} accent={variant.accent} />
