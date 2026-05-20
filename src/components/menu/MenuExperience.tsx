@@ -24,6 +24,17 @@ export function MenuExperience() {
   const [varIndex, setVarIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const lockRef = useRef(false);
+  const pointerRef = useRef({ x: 0, y: 0 });
+
+  // Pointer parallax
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      pointerRef.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+      pointerRef.current.y = -((e.clientY / window.innerHeight) * 2 - 1);
+    };
+    window.addEventListener("pointermove", onMove);
+    return () => window.removeEventListener("pointermove", onMove);
+  }, []);
 
   const category = MENU[catIndex];
   const variant = category.variants[varIndex];
