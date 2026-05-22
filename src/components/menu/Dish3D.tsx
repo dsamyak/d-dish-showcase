@@ -20,31 +20,55 @@ function jitter(seed: number) {
 function Plate() {
   return (
     <group>
+      {/* Outer porcelain rim */}
       <mesh receiveShadow castShadow position={[0, -0.2, 0]}>
-        <cylinderGeometry args={[1.55, 1.5, 0.06, 96]} />
+        <cylinderGeometry args={[1.55, 1.5, 0.06, 128]} />
         <meshPhysicalMaterial
           color="#f8f3ea"
-          roughness={0.25}
-          metalness={0.05}
-          clearcoat={0.6}
-          clearcoatRoughness={0.2}
+          roughness={0.18}
+          metalness={0.0}
+          clearcoat={0.85}
+          clearcoatRoughness={0.12}
+          ior={1.5}
+          reflectivity={0.55}
+          sheen={0.25}
+          sheenColor={"#fff2dc"}
         />
       </mesh>
+      {/* Inner well */}
       <mesh receiveShadow position={[0, -0.17, 0]}>
-        <cylinderGeometry args={[1.25, 1.3, 0.04, 96]} />
-        <meshPhysicalMaterial color="#efe7d6" roughness={0.4} clearcoat={0.4} />
+        <cylinderGeometry args={[1.25, 1.3, 0.04, 128]} />
+        <meshPhysicalMaterial
+          color="#efe7d6"
+          roughness={0.32}
+          clearcoat={0.55}
+          clearcoatRoughness={0.18}
+          ior={1.48}
+        />
       </mesh>
+      {/* Specular hotspot decal */}
       <mesh position={[-0.45, -0.135, -0.35]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.18, 32]} />
-        <meshStandardMaterial color="#ffffff" transparent opacity={0.12} />
+        <circleGeometry args={[0.22, 32]} />
+        <meshStandardMaterial color="#ffffff" transparent opacity={0.16} />
       </mesh>
+      {/* Gold rim */}
       <mesh position={[0, -0.13, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[1.32, 1.36, 96]} />
-        <meshStandardMaterial color="#c9a24a" metalness={0.9} roughness={0.25} side={THREE.DoubleSide} />
+        <ringGeometry args={[1.32, 1.36, 128]} />
+        <meshPhysicalMaterial
+          color="#d9b35a"
+          metalness={1}
+          roughness={0.18}
+          iridescence={0.4}
+          iridescenceIOR={1.5}
+          side={THREE.DoubleSide}
+        />
       </mesh>
+      {/* Subtle caustic glow from beneath food */}
+      <pointLight position={[0, -0.05, 0]} intensity={0.25} color={"#ffb070"} distance={1.6} decay={2} />
     </group>
   );
 }
+
 
 // ---------- Steam (for hot dishes) ----------
 
