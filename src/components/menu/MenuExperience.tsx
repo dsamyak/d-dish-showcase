@@ -69,7 +69,7 @@ function DynamicLights({
     const pBoostRim = 1 + Math.abs(pointer.x) * 0.35 + pointer.y * 0.1;
 
     // Smooth lerp intensities
-    const targetKey = mood.keyI * pBoostKey * pulse;
+    const targetKey = mood.keyI * pBoostKey * pulse * flicker;
     const targetRim = mood.rimI * pBoostRim;
     const targetAmb = mood.amb + (1 - Math.abs(pointer.x)) * 0.05;
     cur.current.keyI += (targetKey - cur.current.keyI) * 0.08;
