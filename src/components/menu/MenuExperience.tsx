@@ -4,6 +4,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MENU } from "./dishes";
 import { Dish3D } from "./Dish3D";
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
+import * as THREE from "three";
+
+// Per-category lighting moods (key light color/intensity, rim color, ambient)
+const LIGHT_MOODS: Record<
+  string,
+  { key: string; keyI: number; rim: string; rimI: number; amb: number; fill: string }
+> = {
+  paneer:  { key: "#ffe1b0", keyI: 2.2, rim: "#ffd0a0", rimI: 1.1, amb: 0.35, fill: "#cfe2ff" },
+  chicken: { key: "#ffb070", keyI: 2.6, rim: "#ff7a3a", rimI: 1.4, amb: 0.28, fill: "#9ec4ff" },
+  rice:    { key: "#fff0c8", keyI: 2.0, rim: "#ffe8a8", rimI: 0.9, amb: 0.42, fill: "#dbeaff" },
+  dosa:    { key: "#ffd28a", keyI: 2.4, rim: "#ffa64a", rimI: 1.2, amb: 0.32, fill: "#bfd8ff" },
+  dessert: { key: "#ffe8d8", keyI: 1.8, rim: "#ffc0d8", rimI: 1.0, amb: 0.5,  fill: "#e0d8ff" },
+};
 
 // Smoothly tracks pointer for subtle camera parallax
 function CameraRig({ pointer }: { pointer: { x: number; y: number } }) {
@@ -16,6 +29,107 @@ function CameraRig({ pointer }: { pointer: { x: number; y: number } }) {
     camera.lookAt(0, 0.1, 0);
   });
   return null;
+}
+
+// Real-time lights that shift with category mood and pointer position
+function DynamicLights({
+  pointer,
+  categoryId,
+}: {
+  pointer: { x: number; y: number };
+  categoryId: string;
+}) {
+  const keyRef = useRef<THREE.SpotLight>(null);
+  const rimRef = useRef<THREE.PointLight>(null);
+  const fillRef = useRef<THREE.DirectionalLight>(null);
+  const ambRef = useRef<THREE.AmbientLight>(null);
+
+  // Animated current values, smoothly lerped each frame
+  const cur = useRef({ keyI: 2.2, rimI: 1.1, amb: 0.35, breathe: 0 });
+  const tmpColorKey = useRef(new THREE.Color("#ffe1b0"));
+  const tmpColorRim = useRef(new THREE.Color("#ffd0a0"));
+  const tmpColorFill = useRef(new THREE.Color("#cfe2ff"));
+
+  useFrame((state, delta) => {
+    const mood = LIGHT_MOODS[categoryId] ?? LIGHT_MOODS.paneer;
+
+    // Breathing pulse — subtle, organic
+    cur.current.breathe += delta;
+    const pulse = 1 + Math.sin(cur.current.breathe * 1.4) * 0.04;
+
+    // Pointer-driven boost: when pointer is high/right, key light gets brighter & rim sharpens
+    const pBoostKey = 1 + pointer.y * 0.18;
+    const pBoostRim = 1 + Math.abs(pointer.x) * 0.35 + pointer.y * 0.1;
+
+    // Smooth lerp intensities
+    const targetKey = mood.keyI * pBoostKey * pulse;
+    const targetRim = mood.rimI * pBoostRim;
+    const targetAmb = mood.amb + (1 - Math.abs(pointer.x)) * 0.05;
+    cur.current.keyI += (targetKey - cur.current.keyI) * 0.08;
+    cur.current.rimI += (targetRim - cur.current.rimI) * 0.1;
+    cur.current.amb  += (targetAmb - cur.current.amb)  * 0.06;
+
+    // Lerp colors toward mood
+    tmpColorKey.current.lerp(new THREE.Color(mood.key), 0.05);
+    tmpColorRim.current.lerp(new THREE.Color(mood.rim), 0.05);
+    tmpColorFill.current.lerp(new THREE.Color(mood.fill), 0.05);
+
+    if (keyRef.current) {
+      keyRef.current.intensity = cur.current.keyI;
+      keyRef.current.color.copy(tmpColorKey.current);
+      // Key light drifts slightly with pointer for moving specular highlights
+      keyRef.current.position.x = 2.5 + pointer.x * 0.9;
+      keyRef.current.position.z = 2 + pointer.y * 0.6;
+    }
+    if (rimRef.current) {
+      rimRef.current.intensity = cur.current.rimI;
+      rimRef.current.color.copy(tmpColorRim.current);
+      // Rim light orbits the plate based on pointer — this is what makes
+      // the glossy gravy/syrup highlights slide alive across the surface
+      const angle = pointer.x * Math.PI * 0.6;
+      rimRef.current.position.x = Math.sin(angle) * 2.4;
+      rimRef.current.position.z = -Math.cos(angle) * 2.4;
+      rimRef.current.position.y = 1.1 + pointer.y * 0.5;
+    }
+    if (fillRef.current) {
+      fillRef.current.color.copy(tmpColorFill.current);
+      fillRef.current.intensity = 0.55 + (1 - pointer.y) * 0.1;
+    }
+    if (ambRef.current) {
+      ambRef.current.intensity = cur.current.amb;
+    }
+  });
+
+  return (
+    <>
+      <spotLight
+        ref={keyRef}
+        position={[2.5, 5, 2]}
+        angle={0.55}
+        penumbra={0.85}
+        intensity={2.2}
+        color={"#ffe1b0"}
+        castShadow
+        shadow-mapSize={[1536, 1536]}
+        shadow-bias={-0.0002}
+      />
+      <pointLight
+        ref={rimRef}
+        position={[-2.2, 1.4, -2]}
+        intensity={1.1}
+        color={"#ffd0a0"}
+        distance={8}
+        decay={1.8}
+      />
+      <directionalLight
+        ref={fillRef}
+        position={[-3, 2.5, -3]}
+        intensity={0.55}
+        color={"#cfe2ff"}
+      />
+      <ambientLight ref={ambRef} intensity={0.35} />
+    </>
+  );
 }
 
 
@@ -123,18 +237,6 @@ export function MenuExperience() {
     () => (
       <>
         <SoftShadows size={24} samples={12} focus={0.6} />
-        <spotLight
-          position={[2.5, 5, 2]}
-          angle={0.55}
-          penumbra={0.85}
-          intensity={2.2}
-          color={"#ffe1b0"}
-          castShadow
-          shadow-mapSize={[1536, 1536]}
-          shadow-bias={-0.0002}
-        />
-        <directionalLight position={[-3, 2.5, -3]} intensity={0.55} color={"#cfe2ff"} />
-        <ambientLight intensity={0.35} />
         <mesh position={[0, -0.45, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
           <circleGeometry args={[6, 64]} />
           <meshStandardMaterial color={"#3a2418"} roughness={0.85} metalness={0.05} />
@@ -227,6 +329,7 @@ export function MenuExperience() {
           <color attach="background" args={["#f3ebdc"]} />
           <fog attach="fog" args={["#f3ebdc", 6, 14]} />
           <CameraRig pointer={pointerRef.current} />
+          <DynamicLights pointer={pointerRef.current} categoryId={category.id} />
           {stageStatic}
           <group key={`${category.id}-${varIndex}`}>
             <Dish3D shape={category.shape} color={variant.color} accent={variant.accent} />
