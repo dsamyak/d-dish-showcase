@@ -53,16 +53,23 @@ function DynamicLights({
   useFrame((state, delta) => {
     const mood = LIGHT_MOODS[categoryId] ?? LIGHT_MOODS.paneer;
 
-    // Breathing pulse — subtle, organic
+    // Breathing pulse + candle flicker — subtle, organic
     cur.current.breathe += delta;
-    const pulse = 1 + Math.sin(cur.current.breathe * 1.4) * 0.04;
+    const t = cur.current.breathe;
+    const pulse = 1 + Math.sin(t * 1.4) * 0.04;
+    // Layered sin noise approximates candle flicker without RNG cost
+    const flicker =
+      1 +
+      (Math.sin(t * 11.3) * 0.5 + Math.sin(t * 17.7 + 1.3) * 0.3 + Math.sin(t * 27.1 + 2.1) * 0.2) *
+        0.05;
+
 
     // Pointer-driven boost: when pointer is high/right, key light gets brighter & rim sharpens
     const pBoostKey = 1 + pointer.y * 0.18;
     const pBoostRim = 1 + Math.abs(pointer.x) * 0.35 + pointer.y * 0.1;
 
     // Smooth lerp intensities
-    const targetKey = mood.keyI * pBoostKey * pulse;
+    const targetKey = mood.keyI * pBoostKey * pulse * flicker;
     const targetRim = mood.rimI * pBoostRim;
     const targetAmb = mood.amb + (1 - Math.abs(pointer.x)) * 0.05;
     cur.current.keyI += (targetKey - cur.current.keyI) * 0.08;
@@ -322,12 +329,19 @@ export function MenuExperience() {
       <div className="absolute inset-0 z-0">
         <Canvas
           shadows
-          dpr={[1, 1.75]}
+          dpr={[1, 2]}
           camera={{ position: [0, 1.7, 3.4], fov: 36 }}
-          gl={{ antialias: true, toneMappingExposure: 1.05, powerPreference: "high-performance" }}
+          gl={{
+            antialias: true,
+            toneMapping: THREE.ACESFilmicToneMapping,
+            toneMappingExposure: 1.15,
+            powerPreference: "high-performance",
+          }}
         >
-          <color attach="background" args={["#f3ebdc"]} />
-          <fog attach="fog" args={["#f3ebdc", 6, 14]} />
+          <color attach="background" args={["#1a1208"]} />
+          <fog attach="fog" args={["#1a1208", 5, 13]} />
+          {/* Sky/ground tint for natural ambient bounce */}
+          <hemisphereLight args={["#ffd9a8", "#3a2418", 0.4]} />
           <CameraRig pointer={pointerRef.current} />
           <DynamicLights pointer={pointerRef.current} categoryId={category.id} />
           {stageStatic}
@@ -336,6 +350,7 @@ export function MenuExperience() {
           </group>
         </Canvas>
       </div>
+
 
       {/* Dish info card (right) */}
       <div className="pointer-events-none absolute right-6 top-1/2 z-30 w-[320px] max-w-[42vw] -translate-y-1/2 text-right md:right-14">
