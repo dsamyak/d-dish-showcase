@@ -237,18 +237,6 @@ export function MenuExperience() {
     () => (
       <>
         <SoftShadows size={24} samples={12} focus={0.6} />
-        <spotLight
-          position={[2.5, 5, 2]}
-          angle={0.55}
-          penumbra={0.85}
-          intensity={2.2}
-          color={"#ffe1b0"}
-          castShadow
-          shadow-mapSize={[1536, 1536]}
-          shadow-bias={-0.0002}
-        />
-        <directionalLight position={[-3, 2.5, -3]} intensity={0.55} color={"#cfe2ff"} />
-        <ambientLight intensity={0.35} />
         <mesh position={[0, -0.45, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
           <circleGeometry args={[6, 64]} />
           <meshStandardMaterial color={"#3a2418"} roughness={0.85} metalness={0.05} />
