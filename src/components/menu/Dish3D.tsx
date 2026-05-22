@@ -181,18 +181,22 @@ function CurryDish({ color, accent }: { color: string; accent: string }) {
 
   return (
     <group position={[0, -0.07, 0]}>
-      {/* Gravy pool with subtle gloss */}
+      {/* Gravy pool — glossy, with iridescent oil sheen */}
       <mesh castShadow receiveShadow>
-        <cylinderGeometry args={[1.05, 1.05, 0.2, 64]} />
+        <cylinderGeometry args={[1.05, 1.05, 0.2, 96]} />
         <meshPhysicalMaterial
           color={color}
-          roughness={0.4}
-          clearcoat={0.6}
-          clearcoatRoughness={0.3}
-          sheen={0.4}
-          sheenColor={"#ffaa66"}
+          roughness={0.28}
+          metalness={0.0}
+          clearcoat={0.95}
+          clearcoatRoughness={0.18}
+          sheen={0.55}
+          sheenColor={"#ffb070"}
+          ior={1.4}
+          reflectivity={0.5}
         />
       </mesh>
+
       {/* Oil shimmer ring */}
       <mesh position={[0, 0.105, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.5, 0.95, 64]} />
