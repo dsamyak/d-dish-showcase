@@ -322,12 +322,19 @@ export function MenuExperience() {
       <div className="absolute inset-0 z-0">
         <Canvas
           shadows
-          dpr={[1, 1.75]}
+          dpr={[1, 2]}
           camera={{ position: [0, 1.7, 3.4], fov: 36 }}
-          gl={{ antialias: true, toneMappingExposure: 1.05, powerPreference: "high-performance" }}
+          gl={{
+            antialias: true,
+            toneMapping: THREE.ACESFilmicToneMapping,
+            toneMappingExposure: 1.15,
+            powerPreference: "high-performance",
+          }}
         >
-          <color attach="background" args={["#f3ebdc"]} />
-          <fog attach="fog" args={["#f3ebdc", 6, 14]} />
+          <color attach="background" args={["#1a1208"]} />
+          <fog attach="fog" args={["#1a1208", 5, 13]} />
+          {/* Sky/ground tint for natural ambient bounce */}
+          <hemisphereLight args={["#ffd9a8", "#3a2418", 0.4]} />
           <CameraRig pointer={pointerRef.current} />
           <DynamicLights pointer={pointerRef.current} categoryId={category.id} />
           {stageStatic}
@@ -336,6 +343,7 @@ export function MenuExperience() {
           </group>
         </Canvas>
       </div>
+
 
       {/* Dish info card (right) */}
       <div className="pointer-events-none absolute right-6 top-1/2 z-30 w-[320px] max-w-[42vw] -translate-y-1/2 text-right md:right-14">
