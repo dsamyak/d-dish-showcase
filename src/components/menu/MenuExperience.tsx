@@ -53,9 +53,16 @@ function DynamicLights({
   useFrame((state, delta) => {
     const mood = LIGHT_MOODS[categoryId] ?? LIGHT_MOODS.paneer;
 
-    // Breathing pulse — subtle, organic
+    // Breathing pulse + candle flicker — subtle, organic
     cur.current.breathe += delta;
-    const pulse = 1 + Math.sin(cur.current.breathe * 1.4) * 0.04;
+    const t = cur.current.breathe;
+    const pulse = 1 + Math.sin(t * 1.4) * 0.04;
+    // Layered sin noise approximates candle flicker without RNG cost
+    const flicker =
+      1 +
+      (Math.sin(t * 11.3) * 0.5 + Math.sin(t * 17.7 + 1.3) * 0.3 + Math.sin(t * 27.1 + 2.1) * 0.2) *
+        0.05;
+
 
     // Pointer-driven boost: when pointer is high/right, key light gets brighter & rim sharpens
     const pBoostKey = 1 + pointer.y * 0.18;
