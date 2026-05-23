@@ -469,6 +469,8 @@ export function MenuExperience() {
           <hemisphereLight args={["#ffd9a8", "#3a2418", 0.4]} />
           <CameraRig pointer={pointerRef.current} />
           <DynamicLights pointer={pointerRef.current} categoryId={category.id} />
+          <Caustics pointer={pointerRef.current} categoryId={category.id} />
+
           {stageStatic}
           <group key={`${category.id}-${varIndex}`}>
             <Dish3D shape={category.shape} color={variant.color} accent={variant.accent} />
