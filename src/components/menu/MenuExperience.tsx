@@ -149,6 +149,121 @@ function DynamicLights({
   );
 }
 
+// ---------- Animated projected caustics ----------
+// A procedural shader plane sitting just above the table. It simulates the
+// rippling light pattern a glossy plate would throw, tinted per-category and
+// offset by pointer to feel reactive — no texture sampling required.
+const CAUSTIC_TINTS: Record<string, [number, number, number]> = {
+  paneer:  [1.00, 0.78, 0.45],
+  chicken: [1.00, 0.55, 0.28],
+  rice:    [1.00, 0.88, 0.58],
+  dosa:    [1.00, 0.70, 0.36],
+  dessert: [1.00, 0.80, 0.62],
+};
+
+function Caustics({
+  pointer,
+  categoryId,
+}: {
+  pointer: { x: number; y: number };
+  categoryId: string;
+}) {
+  const matRef = useRef<THREE.ShaderMaterial>(null);
+  const tintCur = useRef(new THREE.Vector3(1, 0.78, 0.45));
+  const offsetCur = useRef(new THREE.Vector2(0, 0));
+  const intensityCur = useRef(1.0);
+
+  const uniforms = useMemo(
+    () => ({
+      uTime:      { value: 0 },
+      uTint:      { value: new THREE.Vector3(1, 0.78, 0.45) },
+      uOffset:    { value: new THREE.Vector2(0, 0) },
+      uIntensity: { value: 1.0 },
+    }),
+    []
+  );
+
+  useFrame((_, delta) => {
+    const tgt = CAUSTIC_TINTS[categoryId] ?? CAUSTIC_TINTS.paneer;
+    tintCur.current.lerp(new THREE.Vector3(tgt[0], tgt[1], tgt[2]), 0.06);
+
+    // Pointer skews the caustic projection — mimics light source motion
+    const tx = pointer.x * 0.6;
+    const ty = pointer.y * 0.4;
+    offsetCur.current.x += (tx - offsetCur.current.x) * 0.08;
+    offsetCur.current.y += (ty - offsetCur.current.y) * 0.08;
+
+    const baseI = categoryId === "dessert" ? 0.7 : categoryId === "chicken" ? 1.25 : 1.0;
+    const targetI = baseI * (1 + pointer.y * 0.25 + Math.abs(pointer.x) * 0.12);
+    intensityCur.current += (targetI - intensityCur.current) * 0.08;
+
+    uniforms.uTime.value += delta;
+    uniforms.uTint.value.copy(tintCur.current);
+    uniforms.uOffset.value.copy(offsetCur.current);
+    uniforms.uIntensity.value = intensityCur.current;
+  });
+
+  return (
+    <mesh position={[0, -0.43, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={1}>
+      <circleGeometry args={[2.2, 96]} />
+      <shaderMaterial
+        ref={matRef}
+        transparent
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+        uniforms={uniforms}
+        vertexShader={`
+          varying vec2 vUv;
+          void main() {
+            vUv = uv - 0.5;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `}
+        fragmentShader={`
+          precision highp float;
+          varying vec2 vUv;
+          uniform float uTime;
+          uniform vec3  uTint;
+          uniform vec2  uOffset;
+          uniform float uIntensity;
+
+          // Cheap caustic approximation: sum of moving sinusoidal distance fields.
+          float caustic(vec2 p, float t) {
+            vec3 k = vec3(p, t * 0.45);
+            float c = 0.0;
+            float inten = 0.0045;
+            for (int n = 0; n < 5; n++) {
+              float i = float(n) + 1.0;
+              vec2 q = vec2(
+                cos(i - k.z + k.x * i) + sin(k.y * i - k.z) / i,
+                sin(i - k.z + k.y * i) + cos(k.x * i + k.z) / i
+              );
+              c += inten / length(vec2(k.x / q.x, k.y / q.y));
+            }
+            c = 1.6 - pow(c, 1.35);
+            return clamp(c * c * c * c, 0.0, 1.0);
+          }
+
+          void main() {
+            vec2 p = vUv * 4.5 + uOffset * 1.5;
+            float c = caustic(p, uTime);
+
+            float d = length(vUv);
+            float falloff = smoothstep(0.5, 0.05, d);
+            float core = smoothstep(0.32, 0.0, d) * 0.55;
+
+            float a = (c * 0.9 + core) * falloff * uIntensity;
+            vec3 col = uTint * a;
+            gl_FragColor = vec4(col, a);
+          }
+        `}
+      />
+    </mesh>
+  );
+}
+
+
+
 
 export function MenuExperience() {
   const [catIndex, setCatIndex] = useState(0);
@@ -354,6 +469,8 @@ export function MenuExperience() {
           <hemisphereLight args={["#ffd9a8", "#3a2418", 0.4]} />
           <CameraRig pointer={pointerRef.current} />
           <DynamicLights pointer={pointerRef.current} categoryId={category.id} />
+          <Caustics pointer={pointerRef.current} categoryId={category.id} />
+
           {stageStatic}
           <group key={`${category.id}-${varIndex}`}>
             <Dish3D shape={category.shape} color={variant.color} accent={variant.accent} />
