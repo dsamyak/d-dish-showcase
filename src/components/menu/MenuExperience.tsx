@@ -1,5 +1,15 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, Environment, SoftShadows } from "@react-three/drei";
+import {
+  EffectComposer,
+  Bloom,
+  Noise,
+  Vignette,
+  BrightnessContrast,
+  HueSaturation,
+  SMAA,
+} from "@react-three/postprocessing";
+import { BlendFunction, KernelSize } from "postprocessing";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MENU } from "./dishes";
 import { Dish3D } from "./Dish3D";
