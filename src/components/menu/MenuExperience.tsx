@@ -1,5 +1,15 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, Environment, SoftShadows } from "@react-three/drei";
+import {
+  EffectComposer,
+  Bloom,
+  Noise,
+  Vignette,
+  BrightnessContrast,
+  HueSaturation,
+  SMAA,
+} from "@react-three/postprocessing";
+import { BlendFunction, KernelSize } from "postprocessing";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MENU } from "./dishes";
 import { Dish3D } from "./Dish3D";
@@ -348,6 +358,20 @@ export function MenuExperience() {
           <group key={`${category.id}-${varIndex}`}>
             <Dish3D shape={category.shape} color={variant.color} accent={variant.accent} />
           </group>
+          <EffectComposer multisampling={0} enableNormalPass={false}>
+            <SMAA />
+            <Bloom
+              intensity={0.85}
+              luminanceThreshold={0.62}
+              luminanceSmoothing={0.22}
+              mipmapBlur
+              kernelSize={KernelSize.LARGE}
+            />
+            <HueSaturation hue={0} saturation={0.08} />
+            <BrightnessContrast brightness={0.0} contrast={0.08} />
+            <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.35} />
+            <Vignette eskil={false} offset={0.28} darkness={0.85} />
+          </EffectComposer>
         </Canvas>
       </div>
 
