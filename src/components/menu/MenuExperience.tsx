@@ -371,20 +371,34 @@ export function MenuExperience() {
   const stageStatic = useMemo(
     () => (
       <>
-        <SoftShadows size={24} samples={12} focus={0.6} />
-        <mesh position={[0, -0.45, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-          <circleGeometry args={[6, 64]} />
-          <meshStandardMaterial color={"#3a2418"} roughness={0.85} metalness={0.05} />
+        <SoftShadows size={28} samples={16} focus={0.7} />
+        {/* Linen tablecloth — warm woven base with subtle anisotropy */}
+        <mesh position={[0, -0.451, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+          <circleGeometry args={[6, 96]} />
+          <meshPhysicalMaterial
+            color={"#2e1c10"}
+            roughness={0.92}
+            metalness={0.0}
+            sheen={0.35}
+            sheenColor={"#6b4226"}
+            sheenRoughness={0.8}
+          />
+        </mesh>
+        {/* Inner table glow (warm bounce light from candle/key) */}
+        <mesh position={[0, -0.449, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[2.6, 64]} />
+          <meshBasicMaterial color={"#5a2e14"} transparent opacity={0.35} />
         </mesh>
         <ContactShadows
           position={[0, -0.44, 0]}
-          opacity={0.7}
-          blur={2.6}
+          opacity={0.82}
+          blur={2.2}
           far={4}
-          resolution={512}
-          color={"#1a0f08"}
+          resolution={1024}
+          color={"#0a0503"}
+          scale={6}
         />
-        <Environment preset="apartment" />
+        <Environment preset="apartment" environmentIntensity={0.85} />
       </>
     ),
     []
