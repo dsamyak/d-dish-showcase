@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows, Environment, SoftShadows } from "@react-three/drei";
+import { ContactShadows, Environment, SoftShadows, AccumulativeShadows, RandomizedLight } from "@react-three/drei";
 import {
   EffectComposer,
   Bloom,
@@ -8,6 +8,9 @@ import {
   BrightnessContrast,
   HueSaturation,
   SMAA,
+  DepthOfField,
+  ChromaticAberration,
+  ToneMapping,
 } from "@react-three/postprocessing";
 import { BlendFunction, KernelSize } from "postprocessing";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
