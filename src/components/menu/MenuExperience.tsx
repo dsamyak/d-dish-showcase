@@ -494,17 +494,19 @@ export function MenuExperience() {
           </group>
           <EffectComposer multisampling={0} enableNormalPass={false}>
             <SMAA />
+            <DepthOfField focusDistance={0.018} focalLength={0.04} bokehScale={2.2} />
             <Bloom
-              intensity={0.85}
-              luminanceThreshold={0.62}
-              luminanceSmoothing={0.22}
+              intensity={0.95}
+              luminanceThreshold={0.58}
+              luminanceSmoothing={0.25}
               mipmapBlur
               kernelSize={KernelSize.LARGE}
             />
-            <HueSaturation hue={0} saturation={0.08} />
-            <BrightnessContrast brightness={0.0} contrast={0.08} />
-            <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.35} />
-            <Vignette eskil={false} offset={0.28} darkness={0.85} />
+            <ChromaticAberration offset={[0.0006, 0.0009] as unknown as THREE.Vector2} radialModulation={false} modulationOffset={0} />
+            <HueSaturation hue={0} saturation={0.1} />
+            <BrightnessContrast brightness={0.0} contrast={0.1} />
+            <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.32} />
+            <Vignette eskil={false} offset={0.25} darkness={0.9} />
           </EffectComposer>
         </Canvas>
       </div>
