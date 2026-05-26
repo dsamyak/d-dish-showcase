@@ -10,7 +10,8 @@ import {
   SMAA,
   DepthOfField,
   ChromaticAberration,
-  ToneMapping,
+
+
 } from "@react-three/postprocessing";
 import { BlendFunction, KernelSize } from "postprocessing";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
