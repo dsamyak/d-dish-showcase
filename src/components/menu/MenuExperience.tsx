@@ -8,6 +8,10 @@ import {
   BrightnessContrast,
   HueSaturation,
   SMAA,
+  DepthOfField,
+  ChromaticAberration,
+
+
 } from "@react-three/postprocessing";
 import { BlendFunction, KernelSize } from "postprocessing";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -368,20 +372,34 @@ export function MenuExperience() {
   const stageStatic = useMemo(
     () => (
       <>
-        <SoftShadows size={24} samples={12} focus={0.6} />
-        <mesh position={[0, -0.45, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-          <circleGeometry args={[6, 64]} />
-          <meshStandardMaterial color={"#3a2418"} roughness={0.85} metalness={0.05} />
+        <SoftShadows size={28} samples={16} focus={0.7} />
+        {/* Linen tablecloth — warm woven base with subtle anisotropy */}
+        <mesh position={[0, -0.451, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+          <circleGeometry args={[6, 96]} />
+          <meshPhysicalMaterial
+            color={"#2e1c10"}
+            roughness={0.92}
+            metalness={0.0}
+            sheen={0.35}
+            sheenColor={"#6b4226"}
+            sheenRoughness={0.8}
+          />
+        </mesh>
+        {/* Inner table glow (warm bounce light from candle/key) */}
+        <mesh position={[0, -0.449, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[2.6, 64]} />
+          <meshBasicMaterial color={"#5a2e14"} transparent opacity={0.35} />
         </mesh>
         <ContactShadows
           position={[0, -0.44, 0]}
-          opacity={0.7}
-          blur={2.6}
+          opacity={0.82}
+          blur={2.2}
           far={4}
-          resolution={512}
-          color={"#1a0f08"}
+          resolution={1024}
+          color={"#0a0503"}
+          scale={6}
         />
-        <Environment preset="apartment" />
+        <Environment preset="apartment" environmentIntensity={0.85} />
       </>
     ),
     []
@@ -477,17 +495,19 @@ export function MenuExperience() {
           </group>
           <EffectComposer multisampling={0} enableNormalPass={false}>
             <SMAA />
+            <DepthOfField focusDistance={0.018} focalLength={0.04} bokehScale={2.2} />
             <Bloom
-              intensity={0.85}
-              luminanceThreshold={0.62}
-              luminanceSmoothing={0.22}
+              intensity={0.95}
+              luminanceThreshold={0.58}
+              luminanceSmoothing={0.25}
               mipmapBlur
               kernelSize={KernelSize.LARGE}
             />
-            <HueSaturation hue={0} saturation={0.08} />
-            <BrightnessContrast brightness={0.0} contrast={0.08} />
-            <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.35} />
-            <Vignette eskil={false} offset={0.28} darkness={0.85} />
+            <ChromaticAberration offset={new THREE.Vector2(0.0006, 0.0009)} radialModulation={false} modulationOffset={0} />
+            <HueSaturation hue={0} saturation={0.1} />
+            <BrightnessContrast brightness={0.0} contrast={0.1} />
+            <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.32} />
+            <Vignette eskil={false} offset={0.25} darkness={0.9} />
           </EffectComposer>
         </Canvas>
       </div>
