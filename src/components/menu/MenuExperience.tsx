@@ -503,7 +503,7 @@ export function MenuExperience() {
               mipmapBlur
               kernelSize={KernelSize.LARGE}
             />
-            <ChromaticAberration offset={[0.0006, 0.0009] as unknown as THREE.Vector2} radialModulation={false} modulationOffset={0} />
+            <ChromaticAberration offset={new THREE.Vector2(0.0006, 0.0009)} radialModulation={false} modulationOffset={0} />
             <HueSaturation hue={0} saturation={0.1} />
             <BrightnessContrast brightness={0.0} contrast={0.1} />
             <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.32} />
